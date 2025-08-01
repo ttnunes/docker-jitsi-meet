@@ -1,0 +1,28 @@
+name: Sync Tags from Upstream
+
+on:
+  workflow_dispatch:  # permite execução manual via botão
+  schedule:
+    - cron: '0 3 * * *'  # roda todo dia às 03:00 UTC (00:00 no Brasil)
+
+jobs:
+  sync-tags:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout this repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # necessário para lidar com todas as refs e tags
+
+      - name: Adicionar o remote upstream
+        run: git remote add upstream https://github.com/jitsi/docker-jitsi-meet
+
+      - name: Buscar todas as tags do upstream
+        run: git fetch --tags upstream
+
+      - name: Fazer push das tags para o fork (origin)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git push https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/${{ github.repository }} --tags
